@@ -74,9 +74,10 @@ const GREETING = 'Здравствуйте! Я выбрал следующие �
 const CUR = '₽';
 
 const CATS = [
-  {id:'hats',     name:'Ушанки',   icon:'🧢'},
+  {id:'hats',     name:'Головные уборы', icon:'🧢'},
   {id:'sweaters', name:'Свитеры',  icon:'🧶'},
   {id:'scarves',  name:'Шарфы',    icon:'🧣'},
+  {id:'jackets',  name:'Куртки',   icon:'🧥'},
   {id:'custom',   name:'Товары из Китая', icon:'📦'}
 ];
 
@@ -86,11 +87,20 @@ const PRODUCTS = [
     {id:'black', name:'Чёрный', swatch:'#191919', img:'images/01_black_hat_kys.webp'},
     {id:'white', name:'Белый', swatch:'#f5efe4', img:'images/02_white_hat_kys.webp'}
   ], desc:'Ушанка с пушистой фактурой, отворотом и контрастной нашивкой. Выберите чёрный или белый цвет.'},
+  {id:9, cat:'hats', name:'Шапка зимняя', price:2000, icon:'🧢', img:'images/kys_winter_hat.webp', sizes:[], desc:'Зимняя шапка с ушками, светлой отделкой и нашивкой kys. Комбинированная расцветка.'},
   {id:3, cat:'sweaters', name:'Свитер', price:3500, icon:'🧶', img:'images/03_dark_sweater_kys.webp', sizes:['M','L','XL'], colors:[
     {id:'graphite', name:'Графитовый', swatch:'#393938', img:'images/03_dark_sweater_kys.webp'},
     {id:'cream', name:'Кремовый', swatch:'#dfd1bd', img:'images/04_cream_sweater_kys.webp'}
   ], desc:'Свитер с высоким воротником и фактурной вязкой. Воротник, манжеты и низ — в рубчик.'},
-  {id:5, cat:'scarves',  name:'Шарф кремовый',      price:2000, icon:'🧣', img:'images/05_cream_scarf_kys.webp',   sizes:[], desc:'Кремовый вязаный шарф с краями в рубчик и контрастной нашивкой kys.'},
+  {id:7, cat:'sweaters', name:'Свитер на молнии', price:3500, icon:'🧶', img:'images/kys_black_cardigan.webp', sizes:['M','L','XL'], colors:[
+    {id:'black', name:'Чёрный', swatch:'#191919', img:'images/kys_black_cardigan.webp'},
+    {id:'grey', name:'Серый', swatch:'#a3a3a3', img:'images/kys_grey_cardigan.webp'}
+  ], desc:'Вязаный свитер на молнии с воротником-стойкой и боковыми карманами. Выберите чёрный или серый цвет.'},
+  {id:5, cat:'scarves', name:'Шарф', price:2000, icon:'🧣', img:'images/05_cream_scarf_kys.webp', sizes:[], colors:[
+    {id:'cream', name:'Кремовый', swatch:'#dfd1bd', img:'images/05_cream_scarf_kys.webp'},
+    {id:'black', name:'Чёрный', swatch:'#191919', img:'images/kys_scarf.webp'}
+  ], desc:'Вязаный шарф с краями в рубчик и нашивкой kys. Выберите кремовый или чёрный цвет.'},
+  {id:8, cat:'jackets', name:'Куртка серая', price:4000, icon:'🧥', img:'images/kys_grey_jacket.webp', sizes:['L','XL'], desc:'Серая куртка на молнии с воротником-стойкой, боковыми карманами и манжетами в рубчик.'},
   {id:6, cat:'custom', kind:'custom', name:'Заказать свой личный товар', price:null, icon:'📦', img:'', sizes:[], desc:'Закажите любой нужный вам товар из Китая. Доставка — в среднем 21 день.'}
 ];
 /* ============================================================ */
