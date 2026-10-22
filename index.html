@@ -76,29 +76,34 @@ const CUR = '₽';
 const CATS = [
   {id:'hats',     name:'Ушанки',   icon:'🧢'},
   {id:'sweaters', name:'Свитеры',  icon:'🧶'},
-  {id:'scarves',  name:'Шарфы',    icon:'🧣'}
+  {id:'scarves',  name:'Шарфы',    icon:'🧣'},
+  {id:'custom',   name:'Товары из Китая', icon:'📦'}
 ];
 
 // img — путь к фото в репозитории, например 'images/tshirt-basic.jpg'. Пусто = показывается эмодзи.
 const PRODUCTS = [
-  {id:1, cat:'hats',     name:'Ушанка чёрная',      price:2000, icon:'🧢', img:'images/01_black_hat_kys.webp',     sizes:[], desc:'Чёрная ушанка с пушистой фактурой, отворотом и контрастной нашивкой.'},
-  {id:2, cat:'hats',     name:'Ушанка молочная',    price:2000, icon:'🧢', img:'images/02_white_hat_kys.webp',     sizes:[], desc:'Молочная ушанка с пушистой фактурой, отворотом и контрастной нашивкой.'},
-  {id:3, cat:'sweaters', name:'Свитер', price:4000, icon:'🧶', img:'images/03_dark_sweater_kys.webp', sizes:['M','L','XL'], colors:[
+  {id:1, cat:'hats', name:'Ушанка', price:2000, icon:'🧢', img:'images/01_black_hat_kys.webp', sizes:[], colors:[
+    {id:'black', name:'Чёрный', swatch:'#191919', img:'images/01_black_hat_kys.webp'},
+    {id:'white', name:'Белый', swatch:'#f5efe4', img:'images/02_white_hat_kys.webp'}
+  ], desc:'Ушанка с пушистой фактурой, отворотом и контрастной нашивкой. Выберите чёрный или белый цвет.'},
+  {id:3, cat:'sweaters', name:'Свитер', price:3500, icon:'🧶', img:'images/03_dark_sweater_kys.webp', sizes:['M','L','XL'], colors:[
     {id:'graphite', name:'Графитовый', swatch:'#393938', img:'images/03_dark_sweater_kys.webp'},
     {id:'cream', name:'Кремовый', swatch:'#dfd1bd', img:'images/04_cream_sweater_kys.webp'}
   ], desc:'Свитер с высоким воротником и фактурной вязкой. Воротник, манжеты и низ — в рубчик.'},
-  {id:5, cat:'scarves',  name:'Шарф кремовый',      price:2000, icon:'🧣', img:'images/05_cream_scarf_kys.webp',   sizes:[], desc:'Кремовый вязаный шарф с краями в рубчик и контрастной нашивкой kys.'}
+  {id:5, cat:'scarves',  name:'Шарф кремовый',      price:2000, icon:'🧣', img:'images/05_cream_scarf_kys.webp',   sizes:[], desc:'Кремовый вязаный шарф с краями в рубчик и контрастной нашивкой kys.'},
+  {id:6, cat:'custom', kind:'custom', name:'Заказать свой личный товар', price:null, icon:'📦', img:'', sizes:[], desc:'Закажите любой нужный вам товар из Китая. Доставка — в среднем 21 день.'}
 ];
 /* ============================================================ */
 
 let s = {view:'list', cat:'all', pid:null, color:null, size:null, cart:[]};
 const app = document.getElementById('app');
 const money = n => n.toLocaleString('ru-RU') + ' ' + CUR;
+const priceText = p => p.price == null ? 'Цена по запросу' : money(p.price);
 const prod  = id => PRODUCTS.find(p => p.id === id);
 const colorFor = (p, id) => (p.colors || []).find(c => c.id === id);
 const photoProduct = (p, colorId) => {
   const color = colorFor(p, colorId);
-  return color ? {...p, img:color.img, name:p.name + ' — ' + color.name.toLowerCase()} : p;
+  return color ? {...p, img:color.img, name:p.name + ', цвет: ' + color.name.toLowerCase()} : p;
 };
 const itemDetails = i => {
   const color = colorFor(prod(i.id), i.color);
@@ -122,6 +127,7 @@ function menu(open) {
 
 function addToCart() {
   const p = prod(s.pid);
+  if (!p || p.kind === 'custom') return;
   if (p.sizes.length && !p.sizes.includes(s.size)) return;
   if (p.colors && !colorFor(p, s.color)) return;
   const size = p.sizes.length ? s.size : null;
@@ -149,9 +155,16 @@ function orderText() {
 }
 function checkout() {
   if (!s.cart.length) return;
-  const url = 'https://t.me/' + MANAGER + '?text=' + encodeURIComponent(orderText());
+  openManager(orderText());
+}
+function openManager(text) {
+  const url = 'https://t.me/' + MANAGER + '?text=' + encodeURIComponent(text);
   if (tg && tg.openTelegramLink) tg.openTelegramLink(url);
   else window.location.assign(url);
+}
+function customOrder() {
+  if (prod(s.pid)?.kind !== 'custom') return;
+  openManager('Здравствуйте! Хочу заказать свой личный товар из Китая. Помогите уточнить стоимость и продолжить оформление заказа.');
 }
 
 function header(title) {
@@ -169,18 +182,21 @@ function render() {
     title = ALL.find(c => c.id === s.cat).name;
     const items = PRODUCTS.filter(p => s.cat === 'all' || p.cat === s.cat);
     body = `<div class="grid">` + items.map(p =>
-      `<div class="card" onclick="openProduct(${p.id})">${pic(p)}<div class="name">${p.name}</div>${p.colors ? `<div class="details">${p.colors.map(c => c.name).join(' · ')}</div>` : ''}<div class="price">${money(p.price)}</div></div>`).join('') + `</div>`;
+      `<div class="card" onclick="openProduct(${p.id})">${pic(p)}<div class="name">${p.name}</div>${p.colors ? `<div class="details">${p.colors.map(c => c.name).join(' · ')}</div>` : ''}<div class="price">${priceText(p)}</div></div>`).join('') + `</div>`;
   }
   if (s.view === 'product') {
     const p = prod(s.pid); title = 'Товар';
     const needsSize = p.sizes.length > 0;
     body = `${tg ? '' : `<div class="back" onclick="back()">← Назад</div>`}
+      ${p.kind === 'custom' ? `<h2 style="margin:6px 0">${p.name}</h2><div class="desc">${p.desc}</div>
+      <div class="desc">Стоимость товара и доставки уточним по ссылке или фотографии.</div>
+      <button class="main" onclick="customOrder()">Обсудить заказ в Telegram</button>` : `
       <div class="big">${pic(photoProduct(p, s.color))}</div><h2 style="margin:6px 0">${p.name}</h2>
       <div class="price" style="font-size:18px">${money(p.price)}</div>
       <div class="desc">${p.desc}</div>
-      ${p.colors ? `<div>Цвет:</div><div class="colors" role="group" aria-label="Цвет свитера">${p.colors.map(c => `<button type="button" class="color ${s.color===c.id?'on':''}" aria-pressed="${s.color===c.id}" onclick="s.color='${c.id}';render()"><span class="swatch" style="background:${c.swatch}" aria-hidden="true"></span>${c.name}</button>`).join('')}</div>` : ''}
-      ${needsSize ? `<div>Размер:</div><div class="sizes" role="group" aria-label="Размер свитера">${p.sizes.map(z => `<button type="button" class="size ${s.size===z?'on':''}" aria-pressed="${s.size===z}" onclick="s.size='${z}';render()">${z}</button>`).join('')}</div>` : ''}
-      <button class="main" ${needsSize && !s.size ? 'disabled' : ''} onclick="addToCart()">${needsSize && !s.size ? 'Выберите размер' : 'Добавить в корзину'}</button>`;
+      ${p.colors ? `<div>Цвет:</div><div class="colors" role="group" aria-label="Цвет товара">${p.colors.map(c => `<button type="button" class="color ${s.color===c.id?'on':''}" aria-pressed="${s.color===c.id}" onclick="s.color='${c.id}';render()"><span class="swatch" style="background:${c.swatch}" aria-hidden="true"></span>${c.name}</button>`).join('')}</div>` : ''}
+      ${needsSize ? `<div>Размер:</div><div class="sizes" role="group" aria-label="Размер товара">${p.sizes.map(z => `<button type="button" class="size ${s.size===z?'on':''}" aria-pressed="${s.size===z}" onclick="s.size='${z}';render()">${z}</button>`).join('')}</div>` : ''}
+      <button class="main" ${needsSize && !s.size ? 'disabled' : ''} onclick="addToCart()">${needsSize && !s.size ? 'Выберите размер' : 'Добавить в корзину'}</button>`}`;
   }
   if (s.view === 'cart') {
     title = 'Корзина';
