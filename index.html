@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Каталог одежды</title>
+<title>kys — каталог одежды</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root{
@@ -33,11 +33,11 @@
   /* товары */
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .card{background:var(--card);border-radius:14px;padding:10px;cursor:pointer}
-  .pic{position:relative;height:150px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:52px;background:rgba(127,127,127,.12);margin-bottom:8px;overflow:hidden}
-  .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .pic{position:relative;aspect-ratio:4/5;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:52px;background:rgba(127,127,127,.12);margin-bottom:8px;overflow:hidden}
+  .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
   .name{font-weight:600;font-size:15px}
   .price{color:var(--hint);font-size:14px;margin-top:2px}
-  .big .pic{height:320px;font-size:96px}
+  .big .pic{width:100%;max-width:480px;margin:0 auto 8px;font-size:96px}
   .desc{line-height:1.45;margin:10px 0}
   .sizes{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 16px}
   .size{padding:8px 14px;border-radius:10px;background:var(--card);cursor:pointer;border:2px solid transparent}
@@ -46,8 +46,8 @@
   button.main:disabled{opacity:.4}
   .row{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;padding:12px;margin-bottom:10px}
   .row .pic{width:60px;height:60px;margin:0;font-size:28px;flex:none}
-  .grow{flex:1}
-  .qty{display:flex;align-items:center;gap:10px}
+  .grow{flex:1;min-width:0}
+  .qty{display:flex;align-items:center;gap:10px;flex-shrink:0}
   .qty b{width:30px;height:30px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer}
   .total{font-size:18px;font-weight:700;margin:14px 0}
   .empty{color:var(--hint);text-align:center;margin-top:60px}
@@ -59,7 +59,8 @@
 <div id="app"></div>
 
 <script>
-const tg = window.Telegram && Telegram.WebApp;
+const telegramApp = window.Telegram && window.Telegram.WebApp;
+const tg = telegramApp && (telegramApp.initData || telegramApp.platform !== 'unknown') ? telegramApp : null;
 if (tg) { tg.ready(); tg.expand(); }
 
 /* ================= НАСТРОЙКИ: меняйте здесь ================= */
@@ -68,22 +69,18 @@ const GREETING = 'Здравствуйте, выбрал эти товары!';
 const CUR = '₽';
 
 const CATS = [
-  {id:'tshirts',   name:'Футболки',        icon:'👕'},
-  {id:'pants',     name:'Штаны',           icon:'👖'},
-  {id:'outerwear', name:'Верхняя одежда',  icon:'🧶'},
-  {id:'jackets',   name:'Куртки',          icon:'🧥'}
+  {id:'hats',     name:'Ушанки',   icon:'🧢'},
+  {id:'sweaters', name:'Свитеры',  icon:'🧶'},
+  {id:'scarves',  name:'Шарфы',    icon:'🧣'}
 ];
 
 // img — путь к фото в репозитории, например 'images/tshirt-basic.jpg'. Пусто = показывается эмодзи.
 const PRODUCTS = [
-  {id:1, cat:'tshirts',   name:'Футболка Basic',    price:1500, icon:'👕', img:'', sizes:['S','M','L','XL'],      desc:'Плотный хлопок 100%, свободный крой. Подходит на каждый день.'},
-  {id:2, cat:'tshirts',   name:'Футболка Oversize', price:1900, icon:'👕', img:'', sizes:['M','L','XL'],          desc:'Оверсайз-силуэт, спущенное плечо, мягкая ткань.'},
-  {id:3, cat:'pants',     name:'Джинсы Straight',   price:5500, icon:'👖', img:'', sizes:['30','32','34','36'],   desc:'Прямой крой, плотный деним, классическая посадка.'},
-  {id:4, cat:'pants',     name:'Карго',             price:5200, icon:'👖', img:'', sizes:['S','M','L'],           desc:'Объёмные карманы, регулируемые штанины.'},
-  {id:5, cat:'outerwear', name:'Худи Classic',      price:4200, icon:'🧶', img:'', sizes:['S','M','L','XL'],      desc:'Футер с начёсом, капюшон на шнурках, карман-кенгуру.'},
-  {id:6, cat:'outerwear', name:'Зип-худи',          price:4900, icon:'🧶', img:'', sizes:['M','L'],               desc:'На молнии, два боковых кармана, плотная резинка на манжетах.'},
-  {id:7, cat:'jackets',   name:'Куртка Бомбер',     price:8900, icon:'🧥', img:'', sizes:['M','L','XL'],          desc:'Лёгкая демисезонная куртка, трикотажные манжеты и воротник.'},
-  {id:8, cat:'jackets',   name:'Пуховик',           price:14900,icon:'🧥', img:'', sizes:['S','M','L','XL'],      desc:'Тёплый зимний пуховик, водоотталкивающая ткань, съёмный капюшон.'}
+  {id:1, cat:'hats',     name:'Ушанка чёрная',      price:2000, icon:'🧢', img:'images/01_black_hat_kys.webp',     sizes:[], desc:'Чёрная ушанка с пушистой фактурой, отворотом и контрастной нашивкой.'},
+  {id:2, cat:'hats',     name:'Ушанка молочная',    price:2000, icon:'🧢', img:'images/02_white_hat_kys.webp',     sizes:[], desc:'Молочная ушанка с пушистой фактурой, отворотом и контрастной нашивкой.'},
+  {id:3, cat:'sweaters', name:'Свитер графитовый',  price:4000, icon:'🧶', img:'images/03_dark_sweater_kys.webp',  sizes:['M','L','XL'], desc:'Графитовый свитер с высоким воротником и фактурной вязкой. Воротник, манжеты и низ — в рубчик.'},
+  {id:4, cat:'sweaters', name:'Свитер кремовый',    price:4000, icon:'🧶', img:'images/04_cream_sweater_kys.webp', sizes:['M','L','XL'], desc:'Кремовый свитер с высоким воротником и фактурной вязкой. Воротник, манжеты и низ — в рубчик.'},
+  {id:5, cat:'scarves',  name:'Шарф кремовый',      price:2000, icon:'🧣', img:'images/05_cream_scarf_kys.webp',   sizes:[], desc:'Кремовый вязаный шарф с краями в рубчик и контрастной нашивкой kys.'}
 ];
 /* ============================================================ */
 
@@ -93,7 +90,7 @@ const money = n => n.toLocaleString('ru-RU') + ' ' + CUR;
 const prod  = id => PRODUCTS.find(p => p.id === id);
 const count = () => s.cart.reduce((a,i) => a + i.qty, 0);
 const total = () => s.cart.reduce((a,i) => a + prod(i.id).price * i.qty, 0);
-const pic   = p => `<div class="pic">${p.icon}${p.img ? `<img src="${p.img}" alt="" onerror="this.remove()">` : ''}</div>`;
+const pic   = p => `<div class="pic">${p.icon}${p.img ? `<img src="${p.img}" alt="${p.name}" decoding="async" onerror="this.remove()">` : ''}</div>`;
 const ALL   = [{id:'all', name:'Все товары', icon:'🛍️'}, ...CATS];
 
 function go(view, patch = {}) { s = {...s, view, ...patch}; render(); window.scrollTo(0,0); }
@@ -104,9 +101,11 @@ function menu(open) {
 }
 
 function addToCart() {
-  if (!s.size) return;
-  const it = s.cart.find(i => i.id === s.pid && i.size === s.size);
-  it ? it.qty++ : s.cart.push({id:s.pid, size:s.size, qty:1});
+  const p = prod(s.pid);
+  if (p.sizes.length && !s.size) return;
+  const size = p.sizes.length ? s.size : null;
+  const it = s.cart.find(i => i.id === s.pid && i.size === size);
+  it ? it.qty++ : s.cart.push({id:s.pid, size, qty:1});
   if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
   go('list');
 }
@@ -120,7 +119,7 @@ function changeQty(idx, d) {
 function orderText() {
   const lines = s.cart.map((i, n) => {
     const p = prod(i.id);
-    return `${n+1}. ${p.name}, размер ${i.size} — ${i.qty} шт × ${money(p.price)}`;
+    return `${n+1}. ${p.name}${i.size ? ', размер ' + i.size : ''} — ${i.qty} шт × ${money(p.price)}`;
   });
   return GREETING + '\n\n' + lines.join('\n') + '\n\nИтого: ' + money(total());
 }
@@ -132,11 +131,11 @@ function checkout() {
 }
 
 function header(title) {
-  return `<div class="top"><button class="ic" onclick="menu(true)">☰</button><div class="ttl">${title}</div>
-    <button class="ic" onclick="go('cart')">🛒${count() ? `<span class="badge">${count()}</span>` : ''}</button></div>`;
+  return `<div class="top"><button class="ic" aria-label="Открыть меню" onclick="menu(true)">☰</button><div class="ttl">${title}</div>
+    <button class="ic" aria-label="Открыть корзину" onclick="go('cart')">🛒${count() ? `<span class="badge">${count()}</span>` : ''}</button></div>`;
 }
 function drawer() {
-  return `<div class="ov" onclick="menu(false)"></div><aside class="drawer"><div class="dh">Каталог</div>` +
+  return `<div class="ov" onclick="menu(false)"></div><aside class="drawer"><div class="dh">kys · Каталог</div>` +
     ALL.map(c => `<div class="item ${s.view==='list' && s.cat===c.id ? 'on' : ''}" onclick="go('list',{cat:'${c.id}'})"><span>${c.icon}</span>${c.name}</div>`).join('') + `</aside>`;
 }
 
@@ -150,12 +149,13 @@ function render() {
   }
   if (s.view === 'product') {
     const p = prod(s.pid); title = 'Товар';
+    const needsSize = p.sizes.length > 0;
     body = `${tg ? '' : `<div class="back" onclick="back()">← Назад</div>`}
       <div class="big">${pic(p)}</div><h2 style="margin:6px 0">${p.name}</h2>
       <div class="price" style="font-size:18px">${money(p.price)}</div>
-      <div class="desc">${p.desc}</div><div>Размер:</div>
-      <div class="sizes">${p.sizes.map(z => `<div class="size ${s.size===z?'on':''}" onclick="s.size='${z}';render()">${z}</div>`).join('')}</div>
-      <button class="main" ${s.size ? '' : 'disabled'} onclick="addToCart()">${s.size ? 'Добавить в корзину' : 'Выберите размер'}</button>`;
+      <div class="desc">${p.desc}</div>
+      ${needsSize ? `<div>Размер:</div><div class="sizes">${p.sizes.map(z => `<div class="size ${s.size===z?'on':''}" onclick="s.size='${z}';render()">${z}</div>`).join('')}</div>` : ''}
+      <button class="main" ${needsSize && !s.size ? 'disabled' : ''} onclick="addToCart()">${needsSize && !s.size ? 'Выберите размер' : 'Добавить в корзину'}</button>`;
   }
   if (s.view === 'cart') {
     title = 'Корзина';
@@ -163,7 +163,7 @@ function render() {
     if (!s.cart.length) body += `<div class="empty">Корзина пуста</div>`;
     else {
       body += s.cart.map((i, idx) => { const p = prod(i.id);
-        return `<div class="row">${pic(p)}<div class="grow"><div class="name">${p.name}</div><div class="price">Размер ${i.size} · ${money(p.price)}</div></div>
+        return `<div class="row">${pic(p)}<div class="grow"><div class="name">${p.name}</div><div class="price">${i.size ? 'Размер ' + i.size + ' · ' : ''}${money(p.price)}</div></div>
         <div class="qty"><b onclick="changeQty(${idx},-1)">−</b>${i.qty}<b onclick="changeQty(${idx},1)">+</b></div></div>`; }).join('')
         + `<div class="total">Итого: ${money(total())}</div>`;
       if (!tg) body += `<button class="main" onclick="checkout()">Отправить заказ продавцу</button>`;
