@@ -37,11 +37,16 @@
   .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
   .name{font-weight:600;font-size:15px}
   .price{color:var(--hint);font-size:14px;margin-top:2px}
+  .details{color:var(--hint);font-size:13px;line-height:1.4;margin:4px 0}
   .big .pic{width:100%;max-width:480px;margin:0 auto 8px;font-size:96px}
   .desc{line-height:1.45;margin:10px 0}
   .sizes{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 16px}
-  .size{padding:8px 14px;border-radius:10px;background:var(--card);cursor:pointer;border:2px solid transparent}
+  .size{padding:8px 14px;border-radius:10px;background:var(--card);color:var(--text);font:inherit;cursor:pointer;border:2px solid transparent}
   .size.on{border-color:var(--btn)}
+  .colors{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 16px}
+  .color{display:flex;align-items:center;gap:8px;padding:9px 12px;border:2px solid transparent;border-radius:10px;background:var(--card);color:var(--text);font:inherit;cursor:pointer}
+  .color.on{border-color:var(--btn)}
+  .swatch{width:20px;height:20px;border-radius:50%;border:1px solid rgba(127,127,127,.3)}
   button.main{width:100%;padding:14px;border:0;border-radius:12px;background:var(--btn);color:var(--btn-text);font-size:16px;font-weight:600}
   button.main:disabled{opacity:.4}
   .row{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;padding:12px;margin-bottom:10px}
@@ -65,7 +70,7 @@ if (tg) { tg.ready(); tg.expand(); }
 
 /* ================= НАСТРОЙКИ: меняйте здесь ================= */
 const MANAGER  = 'exqzmesir';  // ваш username в Telegram БЕЗ значка @
-const GREETING = 'Здравствуйте, выбрал эти товары!';
+const GREETING = 'Здравствуйте! Я выбрал следующие товары:';
 const CUR = '₽';
 
 const CATS = [
@@ -78,22 +83,37 @@ const CATS = [
 const PRODUCTS = [
   {id:1, cat:'hats',     name:'Ушанка чёрная',      price:2000, icon:'🧢', img:'images/01_black_hat_kys.webp',     sizes:[], desc:'Чёрная ушанка с пушистой фактурой, отворотом и контрастной нашивкой.'},
   {id:2, cat:'hats',     name:'Ушанка молочная',    price:2000, icon:'🧢', img:'images/02_white_hat_kys.webp',     sizes:[], desc:'Молочная ушанка с пушистой фактурой, отворотом и контрастной нашивкой.'},
-  {id:3, cat:'sweaters', name:'Свитер графитовый',  price:4000, icon:'🧶', img:'images/03_dark_sweater_kys.webp',  sizes:['M','L','XL'], desc:'Графитовый свитер с высоким воротником и фактурной вязкой. Воротник, манжеты и низ — в рубчик.'},
-  {id:4, cat:'sweaters', name:'Свитер кремовый',    price:4000, icon:'🧶', img:'images/04_cream_sweater_kys.webp', sizes:['M','L','XL'], desc:'Кремовый свитер с высоким воротником и фактурной вязкой. Воротник, манжеты и низ — в рубчик.'},
+  {id:3, cat:'sweaters', name:'Свитер', price:4000, icon:'🧶', img:'images/03_dark_sweater_kys.webp', sizes:['M','L','XL'], colors:[
+    {id:'graphite', name:'Графитовый', swatch:'#393938', img:'images/03_dark_sweater_kys.webp'},
+    {id:'cream', name:'Кремовый', swatch:'#dfd1bd', img:'images/04_cream_sweater_kys.webp'}
+  ], desc:'Свитер с высоким воротником и фактурной вязкой. Воротник, манжеты и низ — в рубчик.'},
   {id:5, cat:'scarves',  name:'Шарф кремовый',      price:2000, icon:'🧣', img:'images/05_cream_scarf_kys.webp',   sizes:[], desc:'Кремовый вязаный шарф с краями в рубчик и контрастной нашивкой kys.'}
 ];
 /* ============================================================ */
 
-let s = {view:'list', cat:'all', pid:null, size:null, cart:[]};
+let s = {view:'list', cat:'all', pid:null, color:null, size:null, cart:[]};
 const app = document.getElementById('app');
 const money = n => n.toLocaleString('ru-RU') + ' ' + CUR;
 const prod  = id => PRODUCTS.find(p => p.id === id);
+const colorFor = (p, id) => (p.colors || []).find(c => c.id === id);
+const photoProduct = (p, colorId) => {
+  const color = colorFor(p, colorId);
+  return color ? {...p, img:color.img, name:p.name + ' — ' + color.name.toLowerCase()} : p;
+};
+const itemDetails = i => {
+  const color = colorFor(prod(i.id), i.color);
+  return [color ? 'Цвет: ' + color.name.toLowerCase() : '', i.size ? 'Размер: ' + i.size : ''].filter(Boolean).join(' · ');
+};
 const count = () => s.cart.reduce((a,i) => a + i.qty, 0);
 const total = () => s.cart.reduce((a,i) => a + prod(i.id).price * i.qty, 0);
 const pic   = p => `<div class="pic">${p.icon}${p.img ? `<img src="${p.img}" alt="${p.name}" decoding="async" onerror="this.remove()">` : ''}</div>`;
 const ALL   = [{id:'all', name:'Все товары', icon:'🛍️'}, ...CATS];
 
 function go(view, patch = {}) { s = {...s, view, ...patch}; render(); window.scrollTo(0,0); }
+function openProduct(id) {
+  const p = prod(id);
+  go('product', {pid:id, color:p.colors ? p.colors[0].id : null, size:null});
+}
 function back() { go('list'); }
 function menu(open) {
   document.querySelector('.drawer').classList.toggle('open', open);
@@ -102,10 +122,12 @@ function menu(open) {
 
 function addToCart() {
   const p = prod(s.pid);
-  if (p.sizes.length && !s.size) return;
+  if (p.sizes.length && !p.sizes.includes(s.size)) return;
+  if (p.colors && !colorFor(p, s.color)) return;
   const size = p.sizes.length ? s.size : null;
-  const it = s.cart.find(i => i.id === s.pid && i.size === size);
-  it ? it.qty++ : s.cart.push({id:s.pid, size, qty:1});
+  const color = p.colors ? s.color : null;
+  const it = s.cart.find(i => i.id === s.pid && i.size === size && i.color === color);
+  it ? it.qty++ : s.cart.push({id:s.pid, color, size, qty:1});
   if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
   go('list');
 }
@@ -119,15 +141,17 @@ function changeQty(idx, d) {
 function orderText() {
   const lines = s.cart.map((i, n) => {
     const p = prod(i.id);
-    return `${n+1}. ${p.name}${i.size ? ', размер ' + i.size : ''} — ${i.qty} шт × ${money(p.price)}`;
+    const color = colorFor(p, i.color);
+    const details = [color ? 'цвет: ' + color.name.toLowerCase() : '', i.size ? 'размер: ' + i.size : ''].filter(Boolean).join(', ');
+    return `${n+1}. ${p.name}${details ? ', ' + details : ''} — ${i.qty} шт. × ${money(p.price)} = ${money(p.price * i.qty)}`;
   });
-  return GREETING + '\n\n' + lines.join('\n') + '\n\nИтого: ' + money(total());
+  return GREETING + '\n\n' + lines.join('\n') + '\n\nИтого: ' + money(total()) + '\n\nХочу продолжить оформление заказа.';
 }
 function checkout() {
   if (!s.cart.length) return;
   const url = 'https://t.me/' + MANAGER + '?text=' + encodeURIComponent(orderText());
   if (tg && tg.openTelegramLink) tg.openTelegramLink(url);
-  else window.open(url, '_blank');
+  else window.location.assign(url);
 }
 
 function header(title) {
@@ -145,16 +169,17 @@ function render() {
     title = ALL.find(c => c.id === s.cat).name;
     const items = PRODUCTS.filter(p => s.cat === 'all' || p.cat === s.cat);
     body = `<div class="grid">` + items.map(p =>
-      `<div class="card" onclick="go('product',{pid:${p.id},size:null})">${pic(p)}<div class="name">${p.name}</div><div class="price">${money(p.price)}</div></div>`).join('') + `</div>`;
+      `<div class="card" onclick="openProduct(${p.id})">${pic(p)}<div class="name">${p.name}</div>${p.colors ? `<div class="details">${p.colors.map(c => c.name).join(' · ')}</div>` : ''}<div class="price">${money(p.price)}</div></div>`).join('') + `</div>`;
   }
   if (s.view === 'product') {
     const p = prod(s.pid); title = 'Товар';
     const needsSize = p.sizes.length > 0;
     body = `${tg ? '' : `<div class="back" onclick="back()">← Назад</div>`}
-      <div class="big">${pic(p)}</div><h2 style="margin:6px 0">${p.name}</h2>
+      <div class="big">${pic(photoProduct(p, s.color))}</div><h2 style="margin:6px 0">${p.name}</h2>
       <div class="price" style="font-size:18px">${money(p.price)}</div>
       <div class="desc">${p.desc}</div>
-      ${needsSize ? `<div>Размер:</div><div class="sizes">${p.sizes.map(z => `<div class="size ${s.size===z?'on':''}" onclick="s.size='${z}';render()">${z}</div>`).join('')}</div>` : ''}
+      ${p.colors ? `<div>Цвет:</div><div class="colors" role="group" aria-label="Цвет свитера">${p.colors.map(c => `<button type="button" class="color ${s.color===c.id?'on':''}" aria-pressed="${s.color===c.id}" onclick="s.color='${c.id}';render()"><span class="swatch" style="background:${c.swatch}" aria-hidden="true"></span>${c.name}</button>`).join('')}</div>` : ''}
+      ${needsSize ? `<div>Размер:</div><div class="sizes" role="group" aria-label="Размер свитера">${p.sizes.map(z => `<button type="button" class="size ${s.size===z?'on':''}" aria-pressed="${s.size===z}" onclick="s.size='${z}';render()">${z}</button>`).join('')}</div>` : ''}
       <button class="main" ${needsSize && !s.size ? 'disabled' : ''} onclick="addToCart()">${needsSize && !s.size ? 'Выберите размер' : 'Добавить в корзину'}</button>`;
   }
   if (s.view === 'cart') {
@@ -163,10 +188,10 @@ function render() {
     if (!s.cart.length) body += `<div class="empty">Корзина пуста</div>`;
     else {
       body += s.cart.map((i, idx) => { const p = prod(i.id);
-        return `<div class="row">${pic(p)}<div class="grow"><div class="name">${p.name}</div><div class="price">${i.size ? 'Размер ' + i.size + ' · ' : ''}${money(p.price)}</div></div>
+        return `<div class="row">${pic(photoProduct(p, i.color))}<div class="grow"><div class="name">${p.name}</div>${itemDetails(i) ? `<div class="details">${itemDetails(i)}</div>` : ''}<div class="price">${money(p.price)}</div></div>
         <div class="qty"><b onclick="changeQty(${idx},-1)">−</b>${i.qty}<b onclick="changeQty(${idx},1)">+</b></div></div>`; }).join('')
         + `<div class="total">Итого: ${money(total())}</div>`;
-      if (!tg) body += `<button class="main" onclick="checkout()">Отправить заказ продавцу</button>`;
+      body += `<button class="main" onclick="checkout()">Оформить заказ</button><div class="details">Откроется чат с @${MANAGER} с готовой заявкой.</div>`;
     }
   }
   if (s.view !== 'cart' && count() > 0)
@@ -179,7 +204,7 @@ function render() {
 function syncTelegramButtons() {
   if (!tg) return;
   s.view === 'list' ? tg.BackButton.hide() : tg.BackButton.show();
-  if (s.view === 'cart' && s.cart.length) { tg.MainButton.setText('Отправить заказ · ' + money(total())); tg.MainButton.show(); }
+  if (s.view === 'cart' && s.cart.length) { tg.MainButton.setText('Оформить заказ · ' + money(total())); tg.MainButton.show(); }
   else tg.MainButton.hide();
 }
 if (tg) { tg.BackButton.onClick(back); tg.MainButton.onClick(checkout); }
